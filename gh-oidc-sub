@@ -1,0 +1,217 @@
+#!/usr/bin/env bash
+
+set -e
+
+PrintUsage()
+{
+  cat <<EOM
+Usage: 
+    <command> [options]:
+        get (--org ORG | --repo owner/repo) [--jq JQ_FILTER]
+        set (--org ORG | --repo owner/repo) --subs "SUBS LIST"
+        usedefault (--org ORG | --repo owner/repo)
+        list-claims
+        list-repos (--org ORG)
+
+Command:
+  get - Gets the value of the sub customization
+  set - Sets the value of the sub customization 
+  usedefault - Use default value instead of a customization
+  list-claims - Lists the claims available for customization
+  list-repos - Generates a tsv with all repo configurations. It has two fields: if repo uses default claims and the claims list.
+
+Options:
+    -h, --help                    : Show script help
+    -o, --org                     : Name of the organization to get/set sub
+    -r, --repo,--repository       : Name of the repo to get/set sub
+    -q, --jq                      : JQ expression to filter the get output (optional)
+    -s, --subs                    : The list of sub customization to set (comma separated). 
+                                    Mandatory for organnization set operation and optional for repo set operation.
+
+Description:
+
+Allows setting and getting OIDC sub customization claims for an organization or a repo.
+
+Learn more on https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect
+
+By default the output JSON returned by the API calls. You can use the --jq option to filter the output.
+
+Examples:
+  # Get the sub customization for the organization mona
+  get --org mona
+  # Sets the sub customization for the organization mona with claims repository_id,environment
+  set --org mona --sub "repo,context,job_workflow_ref"
+  # Gets the list of claims available for customization
+  list-claims
+  # get only the claims list
+  get --org mona --jq ".include_claim_keys" 
+  # Gets the settings for all repos in a org
+  list-repos --org mona 
+
+EOM
+  exit 0
+}
+
+####################################
+# Read in the parameters if passed #
+####################################
+PARAMS=""
+while (( "$#" )); do
+  case "$1" in
+    -h|--help)
+      PrintUsage;
+      exit 0;
+      ;;
+    -o|--org)
+      ORG=$2
+      shift 2
+      ;;
+    -r|--repo|--repository)
+      REPO=$2
+      shift 2
+      ;;
+    -s|--subs)
+      SUBS=$2
+      shift 2
+      ;;
+    -q|--jq)
+        JQ=$2
+        shift 2
+        ;;
+    --) # end argument parsing
+      shift
+      break
+      ;;
+    -*) # unsupported flags
+      echo "Error: Unsupported flag $1" >&2
+      exit 1
+      ;;
+    *) # preserve positional arguments
+  PARAMS="$PARAMS $1"
+  shift
+  ;;
+  esac
+done
+
+ValidateParams() 
+{
+    if [ -z "$ORG" ] && [ -z "$REPO" ]; then
+        echo "Error: --org or --repo is required"
+        return 1
+    fi
+    return 0
+}
+
+ListClaims() 
+{
+    if ! which curl > /dev/null ; then
+        echo "Error: curl is required"
+    else
+        
+        if ! which jq > /dev/null ; then
+            echo "Warning: jq is not installed. Please install jq, will try to show claims using grep. This might not work as expected."
+            echo
+            curl -sS "https://token.actions.githubusercontent.com/.well-known/openid-configuration"  | grep -oP '(?<="claims_supported":\[).[^\]]*(?=\])' | tr -d '"' | tr ',' '\n'
+        else
+            curl -sS "https://token.actions.githubusercontent.com/.well-known/openid-configuration" | jq -r '.claims_supported[]'
+        fi
+    fi
+}
+
+GetSubs ()
+{
+  if [ -n "$JQ" ]; then
+    query="--jq $JQ"
+  fi
+
+  if [ -n "$REPO" ]; then
+    gh api "repos/$REPO/actions/oidc/customization/sub" $query
+  fi
+
+  if [ -n "$ORG" ]; then
+    gh api "orgs/$ORG/actions/oidc/customization/sub" $query
+  fi
+}
+
+SetSubs ()
+{
+    if [ -n "$REPO" ]; then
+        # if subs is not define just don't use default
+        if [ -z "$SUBS" ]; then
+            echo "Subject claims not passed. Will configure repo to use organization customization."
+            gh api -X PUT "repos/$REPO/actions/oidc/customization/sub" -F use_default=false
+        else 
+            echo -n "$SUBS" | jq -r --slurp --raw-input '{"use_default": false,"include_claim_keys": [split(",") | .[] | rtrimstr(" ") | ltrimstr(" ")]}'  | \
+                gh api -X PUT "repos/$REPO/actions/oidc/customization/sub" --input -
+        fi
+    fi
+
+    if [ -n "$ORG" ]; then
+        if [ -z "$SUBS" ]; then
+            echo "Error: --subs is required"
+            return 1
+        fi
+        echo -n "$SUBS" | jq -r --slurp --raw-input '{"include_claim_keys": [split(",") | .[] | rtrimstr(" ") | ltrimstr(" ")]}' | \
+            gh api -X PUT "orgs/$ORG/actions/oidc/customization/sub" --input -
+    fi
+
+}
+
+UseDefaultSubs () 
+{
+    if [ -n "$REPO" ]; then
+        gh api -X PUT "repos/$REPO/actions/oidc/customization/sub" -F use_default=true
+    fi
+
+    if [ -n "$ORG" ]; then
+        jq -r --null-input '{"use_default":true,"include_claim_keys": ["repo","context"]}' | gh api -X PUT "orgs/$ORG/actions/oidc/customization/sub" --input -
+    fi
+}
+
+ListRepos ()
+{
+    if [ -z "$ORG" ]; then
+        echo "Error: --org option is required."
+        exit 1
+    fi
+    # header
+    echo -e "repository\tuse default\tclaims"
+    gh api "orgs/$ORG/repos" --paginate -q .[].full_name | while read -r reponame ; do
+        echo -e -n "$reponame"
+        gh api "repos/$reponame/actions/oidc/customization/sub"  --template '{{printf "\t%t\t" .use_default}}{{ range $index, $claim := .include_claim_keys}}{{if $index}},{{end}}{{$claim}}{{end}}{{"\n"}}'
+    done 
+}
+
+# if no parameters have been passed
+if [ -z "$PARAMS" ]; then
+  PrintUsage;
+  exit 0;
+fi
+
+case $PARAMS in
+" get")
+    ValidateParams || exit 1
+    GetSubs
+    ;;
+" set")
+    ValidateParams || exit 1
+    SetSubs || exit 1
+    ;;
+" usedefault")
+    ValidateParams || exit 1
+    UseDefaultSubs
+    ;;
+" list-claims")
+    ListClaims
+    ;;
+" list-repos")    
+    ListRepos
+    ;;
+*)
+    echo "Unknown command: $PARAMS"
+    echo
+    PrintUsage
+    exit 1
+    ;;
+esac
+
