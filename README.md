@@ -23,7 +23,7 @@ This enables organization & repository admins to standardize OIDC configuration 
 You can install `oidc-sub` as a [gh cli](https://github.com/cli/cli) extension!
 
 ```console
-gh extensions install tspascoal/oidc-sub
+gh extensions install tspascoal/gh-oidc-sub
 ```
 
 #### Verify installation
