@@ -300,10 +300,20 @@ The following scopes are required to use this command:
 
   - `repo` To get and set custom claims
 
-If you are unsure which scopes you have, you can get the list of scopes of the logged in user with the following command:
+If you are unsure which scopes you have, you can get the list of scopes of the logged in user with one of the following commands:
+
+```
+$ gh auth status
+github.com
+  ✓ Logged in to github.com as XXXXXX  (/home/XXXXXXXX/.config/gh/hosts.yml)
+  ✓ Git operations for github.com configured to use https protocol.
+  ✓ Token: gho_************************************
+  ✓ Token scopes: admin:org, delete_repo, gist, repo, workflow
+```
 
 ```console
-$ gh api user -i --silent | grep -i 'X-Oauth-Scopes:' 
+$ gh api user -i --silent | grep -i 'X-Oauth-Scopes:'
+X-Oauth-Scopes: admin:org, delete_repo, gist, repo, workflow
 ```
 
 To get more permissions you can use the [gh auth refresh](https://cli.github.com/manual/gh_auth_refresh) command with `--scopes` parameter.
