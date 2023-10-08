@@ -36,13 +36,19 @@ gh oidc-sub --help
 
 ### Operations
 
-This extension supports three operations. get,set,usedefaul,list-claims and list-repos.
+This extension supports the following operations:
+- get
+- set
+- usedefault
+- list-claims
+- list-repos
 
 To understand the semantics of claim customizaiton, please read [Customizing the subject claims for an organization or repository](https://docs.github.com/en/enterprise-cloud@latest/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#customizing-the-subject-claims-for-an-organization-or-repository).
 
 Pay special attention of the opt in semantics for repository customizations. Setting the organization may not be enough, quoting from GitHub docs:
 
-> Note: When the organization template is applied, it will not affect any action workflows in existing repositories that already use OIDC. For existing repositories, as well as any new repositories that are created after the template has been applied, the repository owner will need to opt-in to receive this configuration, or alternatively could apply a different configuration specific to the repo. For more information, see "[Set the customization template for an OIDC subject claim for a repository.](https://docs.github.com/en/enterprise-cloud@latest/rest/actions/oidc#set-the-customization-template-for-an-oidc-subject-claim-for-a-repository)"
+> [!Note]
+>  When the organization template is applied, it will not affect any action workflows in existing repositories that already use OIDC. For existing repositories, as well as any new repositories that are created after the template has been applied, the repository owner will need to opt-in to receive this configuration, or alternatively could apply a different configuration specific to the repo. For more information, see "[Set the customization template for an OIDC subject claim for a repository.](https://docs.github.com/en/enterprise-cloud@latest/rest/actions/oidc#set-the-customization-template-for-an-oidc-subject-claim-for-a-repository)"
 
 
 #### list-claims
