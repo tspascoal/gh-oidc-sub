@@ -49,7 +49,6 @@ Examples:
   list-repos --org mona 
 
 EOM
-  exit 0
 }
 
 ####################################
