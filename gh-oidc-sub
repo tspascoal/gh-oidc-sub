@@ -121,15 +121,15 @@ ListClaims()
 GetSubs ()
 {
   if [ -n "$JQ" ]; then
-    query="--jq $JQ"
+    query=(--jq "$JQ")
   fi
 
   if [ -n "$REPO" ]; then
-    gh api "repos/$REPO/actions/oidc/customization/sub" $query
+    gh api "repos/$REPO/actions/oidc/customization/sub" "${query[@]}"
   fi
 
   if [ -n "$ORG" ]; then
-    gh api "orgs/$ORG/actions/oidc/customization/sub" $query
+    gh api "orgs/$ORG/actions/oidc/customization/sub" "${query[@]}"
   fi
 }
 
