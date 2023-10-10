@@ -153,7 +153,6 @@ SetSubs ()
         echo -n "$SUBS" | jq -r --slurp --raw-input '{"include_claim_keys": [split(",") | .[] | rtrimstr(" ") | ltrimstr(" ")]}' | \
             gh api -X PUT "orgs/$ORG/actions/oidc/customization/sub" --input -
     fi
-
 }
 
 UseDefaultSubs () 
@@ -163,7 +162,7 @@ UseDefaultSubs ()
     fi
 
     if [ -n "$ORG" ]; then
-        jq -r --null-input '{"use_default":true,"include_claim_keys": ["repo","context"]}' | gh api -X PUT "orgs/$ORG/actions/oidc/customization/sub" --input -
+        gh api -X PUT "orgs/$ORG/actions/oidc/customization/sub" -f include_claim_keys[]=context -f include_claim_keys[]=repo 
     fi
 }
 
