@@ -40,7 +40,7 @@ Examples:
   # Get the sub customization for the organization mona
   get --org mona
   # Sets the sub customization for the organization mona with claims repository_id,environment
-  set --org mona --sub "repo,context,job_workflow_ref"
+  set --org mona --subs "repo,context,job_workflow_ref"
   # Gets the list of claims available for customization
   list-claims
   # get only the claims list
