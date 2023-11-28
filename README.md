@@ -37,9 +37,10 @@ gh oidc-sub --help
 ### Operations
 
 This extension supports the following operations:
+
 - get
 - set
-- usedefault
+- use-default (or usedefault)
 - list-claims
 - list-repos
 
@@ -48,8 +49,7 @@ To understand the semantics of claim customizaiton, please read [Customizing the
 Pay special attention of the opt in semantics for repository customizations. Setting the organization may not be enough, quoting from GitHub docs:
 
 > [!Note]
->  When the organization template is applied, it will not affect any action workflows in existing repositories that already use OIDC. For existing repositories, as well as any new repositories that are created after the template has been applied, the repository owner will need to opt-in to receive this configuration, or alternatively could apply a different configuration specific to the repo. For more information, see "[Set the customization template for an OIDC subject claim for a repository.](https://docs.github.com/en/enterprise-cloud@latest/rest/actions/oidc#set-the-customization-template-for-an-oidc-subject-claim-for-a-repository)"
-
+> When the organization template is applied, it will not affect any action workflows in existing repositories that already use OIDC. For existing repositories, as well as any new repositories that are created after the template has been applied, the repository owner will need to opt-in to receive this configuration, or alternatively could apply a different configuration specific to the repo. For more information, see "[Set the customization template for an OIDC subject claim for a repository.](https://docs.github.com/en/enterprise-cloud@latest/rest/actions/oidc#set-the-customization-template-for-an-oidc-subject-claim-for-a-repository)"
 
 #### list-claims
 
@@ -126,7 +126,6 @@ $ gh oidc-sub get --repo mona/repo --jq '.include_claim_keys'
 ```
 </details>
 
-
 #### set
 
 Set the OIDC subject configuration for an organization or repository.
@@ -169,7 +168,7 @@ $ gh oidc-sub set --repo mona/repo
 ```
 </details>
 
-#### usedefault
+#### use-default
 
 If you want to revert a customization, you can use this command.
 
@@ -185,7 +184,7 @@ Configure organization customization subject claims to the default value
 </summary>
 
 ```console
-$ gh oidc-sub usedefault --org mona
+$ gh oidc-sub use-default --org mona
 {}
 
 $ gh oidc-sub get --org mona
@@ -203,7 +202,7 @@ Configure repository customization subject claims to use the defaults
 </summary>
 
 ```console
-$ gh oidc-sub usedefault --repo mona/repo
+$ gh oidc-sub use-default --repo mona/repo
 {}
 
 $ gh oidc-sub get --repo mona/repo
@@ -247,14 +246,14 @@ Usage:
     <command> [options]:
         get (--org ORG | --repo owner/repo) [--jq JQ_FILTER]
         set (--org ORG | --repo owner/repo) --subs "SUBS LIST"
-        usedefault (--org ORG | --repo owner/repo)
+        use-default (--org ORG | --repo owner/repo) (Note: usedefault is also supported)
         list-claims
         list-repos (--org ORG)
 
 Command:
   get - Gets the value of the sub customization
   set - Sets the value of the sub customization 
-  usedefault - Use default value instead of a customization
+  use-default - Use default value instead of a customization
   list-claims - Lists the claims available for customization
   list-repos - Generates a tsv with all repo configurations. It has two fields: if repo uses default claims and the claims list.
 
@@ -318,7 +317,6 @@ X-Oauth-Scopes: admin:org, delete_repo, gist, repo, workflow
 
 To get more permissions you can use the [gh auth refresh](https://cli.github.com/manual/gh_auth_refresh) command with `--scopes` parameter.
 
-
 ## Debugging
 
 To understand which subject claim is being sent to the OIDC provider from a GitHub action, you can run the following command in a workflow step:
@@ -341,4 +339,3 @@ Federated token details:
  issuer - https://token.actions.githubusercontent.com 
  subject claim - repo:mona/repo:ref:refs/heads/main
 ```
-

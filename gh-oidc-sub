@@ -9,14 +9,14 @@ Usage:
     <command> [options]:
         get (--org ORG | --repo owner/repo) [--jq JQ_FILTER]
         set (--org ORG | --repo owner/repo) --subs "SUBS LIST"
-        usedefault (--org ORG | --repo owner/repo)
+        use-default (--org ORG | --repo owner/repo)
         list-claims
         list-repos (--org ORG)
 
 Command:
   get - Gets the value of the sub customization
   set - Sets the value of the sub customization 
-  usedefault - Use default value instead of a customization
+  use-default - Use default value instead of a customization
   list-claims - Lists the claims available for customization
   list-repos - Generates a tsv with all repo configurations. It has two fields: if repo uses default claims and the claims list.
 
@@ -195,7 +195,7 @@ case $PARAMS in
     ValidateParams || exit 1
     SetSubs || exit 1
     ;;
-" usedefault")
+" usedefault" | " use-default")
     ValidateParams || exit 1
     UseDefaultSubs
     ;;
