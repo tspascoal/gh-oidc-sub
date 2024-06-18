@@ -263,7 +263,7 @@ Options:
     -r, --repo,--repository       : Name of the repo to get/set sub
     -q, --jq                      : JQ expression to filter the get output (optional)
     -s, --subs                    : The list of sub customization to set (comma separated). 
-                                    Mandatory for organnization set operation and optional for repo set operation.
+                                    Mandatory for organization set operation and optional for repo set operation.
 
 Description:
 
